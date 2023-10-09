@@ -165,8 +165,8 @@ public:
     // Cam set
     const int realsense_width = 848;
     const int realsense_height = 480;
-    const int realsense_color_fps = 30;
-    const int realsense_depth_fps = 30;
+    const int realsense_color_fps = 15;
+    const int realsense_depth_fps = 15;
 
     double huddle_distance = 0;
 
@@ -300,7 +300,7 @@ private:
     bool plane_mode_ = 0;
     float previous_real_distance = 0.0f;
     int change_counter = 0;
-    const int FRAME_THRESHOLD = 5;
+    const int FRAME_THRESHOLD = 200;
     const float DISTANCE_THRESHOLD = 0.5f;
     float previous_angle = 0.0f;
 
