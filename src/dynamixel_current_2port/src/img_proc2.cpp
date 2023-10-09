@@ -776,7 +776,9 @@ std::tuple<bool, float, float> Img_proc::applyPCA(cv::Mat &colorMat, cv::Mat dep
 {
     cv::Mat gray, wall_binary;
     cv::cvtColor(depthMat, gray, cv::COLOR_BGR2GRAY);
-    cv::threshold(gray, wall_binary, 200, 255, cv::THRESH_BINARY);
+    cv::threshold(gray, wall_binary, 240, 255, cv::THRESH_BINARY);
+
+    cv::Mat wall_plane_det_img = ROI_Rectangle(wall_binary, 150, 350, 0, 848);
 
     imshow("plane_detect", wall_binary);
 
@@ -832,60 +834,51 @@ std::tuple<bool, float, float> Img_proc::applyPCA(cv::Mat &colorMat, cv::Mat dep
     float distance_rect1 = calculateDistanceFromPlaneToCamera(normal_rect1, centroid_rect1);
     float distance_right_wall = depth_frame.get_distance(828, 240);
     float distance_left_wall = depth_frame.get_distance(20, 240);
+    float distance_wall_center = depth_frame.get_distance(424, 240);
 
     if(distance_rect1 > 0.5 && distance_rect1 < 0.7)
     {
-        int center_x = wall_binary.cols / 2;
+        int center_x = wall_plane_det_img.cols / 2;
         int left_white_pixels = 0;
         int right_white_pixels = 0;
 
-        for (int y = 0; y < wall_binary.rows; y++)
+        for (int y = 0; y < wall_plane_det_img.rows; y++)
         {
             for (int x = 0; x < center_x; x++)
             {
-                if (wall_binary.at<uchar>(y, x) == 255)  // 왼쪽 영역 흰색 픽셀 확인
+                if (wall_plane_det_img.at<uchar>(y, x) == 255)  // 왼쪽 영역 흰색 픽셀 확인
                     left_white_pixels++;
             }
 
-            for (int x = center_x; x < wall_binary.cols; x++)
+            for (int x = center_x; x < wall_plane_det_img.cols; x++)
             {
-                if (wall_binary.at<uchar>(y, x) == 255)  // 오른쪽 영역 흰색 픽셀 확인
+                if (wall_plane_det_img.at<uchar>(y, x) == 255)  // 오른쪽 영역 흰색 픽셀 확인
                     right_white_pixels++;
             }
         }
 
-        if (right_white_pixels < left_white_pixels)
+        if (right_white_pixels * 1.5 < left_white_pixels)
         {
-            if(prev_plane_direction != true)
-            {
-                consecutive_changes++;
-                if(consecutive_changes >= CHANGE_THRESHOLD)
-                {
-                    plane_direction = true;
-                    consecutive_changes = 0;
-                }
-            }
-            else
+            if(consecutive_changes >= CHANGE_THRESHOLD)
             {
                 plane_direction = true;
                 consecutive_changes = 0;
             }
-        }
-        else if(right_white_pixels > left_white_pixels)
-        {
-            if(prev_plane_direction != false)
+            else
             {
                 consecutive_changes++;
-                if(consecutive_changes >= CHANGE_THRESHOLD)
-                {
-                    plane_direction = false;
-                    consecutive_changes = 0;
-                }
             }
-            else
+        }
+        else if(right_white_pixels > left_white_pixels * 1.5)
+        {
+            if(consecutive_changes >= CHANGE_THRESHOLD)
             {
                 plane_direction = false;
                 consecutive_changes = 0;
+            }
+            else
+            {
+                consecutive_changes++;
             }
         }
 
@@ -893,18 +886,20 @@ std::tuple<bool, float, float> Img_proc::applyPCA(cv::Mat &colorMat, cv::Mat dep
 
     }
 
-    if(distance_rect1 > (distance_right_wall * 2))
-    {
-        real_distance = distance_right_wall;
-    }
-    else if(distance_rect1 > (distance_left_wall * 2))
-    {
-        real_distance = distance_left_wall;
-    }
-    else
-    {
-        real_distance = distance_rect1;
-    }
+//    if(distance_rect1 > (distance_right_wall * 2))
+//    {
+//        real_distance = distance_right_wall;
+//    }
+//    else if(distance_rect1 > (distance_left_wall * 2))
+//    {
+//        real_distance = distance_left_wall;
+//    }
+//    else
+//    {
+//        real_distance = distance_rect1;
+//    }
+
+    real_distance = distance_wall_center;
 
     if (abs(real_distance - previous_real_distance) > DISTANCE_THRESHOLD) {
         change_counter++;
@@ -914,7 +909,7 @@ std::tuple<bool, float, float> Img_proc::applyPCA(cv::Mat &colorMat, cv::Mat dep
         } else {
             // FRAME_THRESHOLD 이상의 연속된 변화가 있으면 값을 업데이트
             previous_real_distance = real_distance;
-            change_counter = 0; // 카운터 초기화
+            change_counter = 0;
         }
     }
     else
@@ -941,8 +936,8 @@ std::tuple<bool, float, float> Img_proc::applyPCA(cv::Mat &colorMat, cv::Mat dep
     cv::putText(colorMat, "Angle : " + std::to_string(-angle), cv::Point(10, 50), cv::FONT_HERSHEY_SIMPLEX, 0.7, cv::Scalar{0, 255, 0}, 2);
     cv::putText(colorMat, "plane : " + std::to_string(plane_direction), cv::Point(10, 100), cv::FONT_HERSHEY_SIMPLEX, 0.7, cv::Scalar{0, 255, 0}, 2);
 
-    cv::circle(colorMat, cv::Point(700, 240), 3, -1);
-    cv::circle(colorMat, cv::Point(150, 240), 3, -1);
+    cv::circle(colorMat, cv::Point(828, 240), 5, red_color, -1);
+    cv::circle(colorMat, cv::Point(20, 240), 5, red_color, -1);
 
     cv::rectangle(colorMat, {plane_rect_x1, plane_rect_y1}, {plane_rect_x2, plane_rect_y2}, cv::Scalar(0, 0, 255), 2);
 
