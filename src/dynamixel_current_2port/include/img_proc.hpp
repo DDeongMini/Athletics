@@ -296,7 +296,7 @@ private:
     double wall_distance_ = 0;
     bool prev_plane_direction = false;
     int consecutive_changes = 0;
-    const int CHANGE_THRESHOLD = 3;
+    const int CHANGE_THRESHOLD = 10;
     bool plane_mode_ = 0;
     float previous_real_distance = 0.0f;
     int change_counter = 0;
