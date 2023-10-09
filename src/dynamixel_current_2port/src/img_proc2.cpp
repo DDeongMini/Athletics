@@ -784,7 +784,7 @@ std::tuple<bool, float, float> Img_proc::applyPCA(cv::Mat &colorMat, cv::Mat dep
 
     std::vector<Eigen::Vector3f> points;
 
-    int plane_rect_x1 = 300, plane_rect_y1 = 150, plane_rect_x2 = 548, plane_rect_y2 = 320;
+    int plane_rect_x1 = 350, plane_rect_y1 = 250, plane_rect_x2 = 498, plane_rect_y2 = 350;
 
     for (int y = plane_rect_y1; y < plane_rect_y2; ++y) {
         for (int x = plane_rect_x1; x < plane_rect_x2; ++x) {
@@ -830,8 +830,8 @@ std::tuple<bool, float, float> Img_proc::applyPCA(cv::Mat &colorMat, cv::Mat dep
     centroid_rect1 /= points_rect1.size();
 
     float distance_rect1 = calculateDistanceFromPlaneToCamera(normal_rect1, centroid_rect1);
-    float distance_right_wall = depth_frame.get_distance(750, 240);
-    float distance_left_wall = depth_frame.get_distance(100, 240);
+    float distance_right_wall = depth_frame.get_distance(828, 240);
+    float distance_left_wall = depth_frame.get_distance(20, 240);
 
     if(distance_rect1 > 0.5 && distance_rect1 < 0.7)
     {
@@ -862,13 +862,13 @@ std::tuple<bool, float, float> Img_proc::applyPCA(cv::Mat &colorMat, cv::Mat dep
                 if(consecutive_changes >= CHANGE_THRESHOLD)
                 {
                     plane_direction = true;
-                    consecutive_changes = 0;  // 재설정
+                    consecutive_changes = 0;
                 }
             }
             else
             {
                 plane_direction = true;
-                consecutive_changes = 0;  // 재설정
+                consecutive_changes = 0;
             }
         }
         else if(right_white_pixels > left_white_pixels)
@@ -879,13 +879,13 @@ std::tuple<bool, float, float> Img_proc::applyPCA(cv::Mat &colorMat, cv::Mat dep
                 if(consecutive_changes >= CHANGE_THRESHOLD)
                 {
                     plane_direction = false;
-                    consecutive_changes = 0;  // 재설정
+                    consecutive_changes = 0;
                 }
             }
             else
             {
                 plane_direction = false;
-                consecutive_changes = 0;  // 재설정
+                consecutive_changes = 0;
             }
         }
 
@@ -930,8 +930,6 @@ std::tuple<bool, float, float> Img_proc::applyPCA(cv::Mat &colorMat, cv::Mat dep
         previous_angle = angle;
     }
 
-    // ... (다른 코드들 사이에)
-
     // real_distance 값이 nan인 경우 이전 값을 사용
     if (std::isnan(real_distance)) {
         real_distance = previous_real_distance;
@@ -939,9 +937,8 @@ std::tuple<bool, float, float> Img_proc::applyPCA(cv::Mat &colorMat, cv::Mat dep
         previous_real_distance = real_distance;
     }
 
-    // 이미지에
     cv::putText(colorMat, "distance : " + std::to_string(real_distance), cv::Point(10, 25), cv::FONT_HERSHEY_SIMPLEX, 0.7, cv::Scalar{0, 255, 0}, 2);
-    cv::putText(colorMat, "Angle : " + std::to_string(angle), cv::Point(10, 50), cv::FONT_HERSHEY_SIMPLEX, 0.7, cv::Scalar{0, 255, 0}, 2);
+    cv::putText(colorMat, "Angle : " + std::to_string(-angle), cv::Point(10, 50), cv::FONT_HERSHEY_SIMPLEX, 0.7, cv::Scalar{0, 255, 0}, 2);
     cv::putText(colorMat, "plane : " + std::to_string(plane_direction), cv::Point(10, 100), cv::FONT_HERSHEY_SIMPLEX, 0.7, cv::Scalar{0, 255, 0}, 2);
 
     cv::circle(colorMat, cv::Point(700, 240), 3, -1);
@@ -950,7 +947,7 @@ std::tuple<bool, float, float> Img_proc::applyPCA(cv::Mat &colorMat, cv::Mat dep
     cv::rectangle(colorMat, {plane_rect_x1, plane_rect_y1}, {plane_rect_x2, plane_rect_y2}, cv::Scalar(0, 0, 255), 2);
 
 
-    return std::make_tuple(plane_direction, angle, real_distance);
+    return std::make_tuple(plane_direction, -angle, real_distance);
 }
 
 double Img_proc::Distance_Point(const rs2::depth_frame &depth, cv::Point center)
